@@ -1,2 +1,2 @@
 #!/bin/bash
-cp /home/.evaluationScripts/studentFiles/* /home/labDirectory/
+cp /home/.evaluationScripts/studentDirectory/* /home/labDirectory/
