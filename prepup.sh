@@ -1,14 +1,20 @@
 #!/bin/bash
 
-# Check if exactly one argument is provided
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <Lab Name>"
+# Check if at least one argument (lab name) is provided
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 <Lab Name> [--no-cleanup | -nc]"
     exit 1
 fi
 
 lab=$1
 fullLab="Table"
 studentDirectory="$lab/studentDirectory"
+cleanup=true
+
+# Check for optional second argument for disabling cleanup
+if [ "$2" == "--no-cleanup" ] || [ "$2" == "-nc" ]; then
+    cleanup=false
+fi
 
 # Step 1: Copy the user's lab to .evaluationScripts (excluding node_modules and .solutions)
 rsync -a \
@@ -16,7 +22,7 @@ rsync -a \
     --exclude=".solutions" \
     "$lab/" ".evaluationScripts/"
 
-# Step 2: Copy only files from Lab1 that are NOT in $lab, but skip .bodhiFiles/studentDirectory if present in both
+# Step 2: Copy only files from Table that are NOT in $lab, but skip studentDirectory if present in both
 student_subdir="studentDirectory"
 exclude_student_dir=""
 
@@ -40,5 +46,9 @@ rsync -a --exclude="node_modules" "$studentDirectory/" "labDirectory/"
 # Step 5: Create student archive
 tar -czvf student.tgz labDirectory
 
-# Step 6: Clean up
-rm -rf .evaluationScripts labDirectory
+# Step 6: Clean up unless cleanup is disabled
+if [ "$cleanup" = true ]; then
+    rm -rf .evaluationScripts labDirectory
+else
+    echo "Cleanup disabled. Skipping removal of temporary directories."
+fi

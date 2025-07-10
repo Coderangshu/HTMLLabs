@@ -3,7 +3,7 @@ import json, os
 from bs4 import BeautifulSoup
 
 # Paths
-input_file = "/home/labDirectory/forms.html"
+input_file = "/home/labDirectory/forms-1.html"
 output_file = "/home/.evaluationScripts/evaluate.json"
 
 # Template for result entries
