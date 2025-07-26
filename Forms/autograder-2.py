@@ -1,83 +1,103 @@
+#!/usr/bin/python3
 import json, os
 from bs4 import BeautifulSoup
 
-marks = {
-    "Form": {
-        "Textarea for Comments": 0,
-        "Dropdown Select for Feedback Type": 0,
-        "Multiple Select for Product Type": 0,
-        "Button to Reset the Form": 0,
-        "Button to Submit the Form": 0,
-    }
+# Paths
+input_file = "/home/labDirectory/forms2/forms-2.html"
+
+# Template for result entries
+template = {
+    "testid": "",
+    "status": "failure",
+    "score": 0,
+    "maximum marks": 1,
+    "message": ""
 }
 
-feedback = {
-    "Form": {
-        "Textarea for Comments": "",
-        "Dropdown Select for Feedback Type": "",
-        "Multiple Select for Product Type": "",
-        "Button to Reset the Form": "",
-        "Button to Submit the Form": "",
-    }
-}
-
-with open("/home/labDirectory/forms2/forms-2.html", "r", encoding="utf-8") as f:
-    soup = BeautifulSoup(f, "html.parser")
-
-textarea = soup.find("textarea", {"name": "comments"})
-if textarea and textarea.get("id") == "comments":
-    marks["Form"]["Textarea for Comments"] = 1
-    feedback["Form"]["Textarea for Comments"] = "Textarea for comments is present and correctly named."
-else:
-    feedback["Form"]["Textarea for Comments"] = "Textarea for comments is missing or incorrectly named."
-
-feedback_type_select = soup.find("select", {"name": "feedback_type"})
-if feedback_type_select:
-    options = [opt.get("value") for opt in feedback_type_select.find_all("option")]
-    required_options = {"general", "product", "service", "other"}
-    if required_options.issubset(options):
-        marks["Form"]["Dropdown Select for Feedback Type"] = 1
-        feedback["Form"]["Dropdown Select for Feedback Type"] = "Dropdown select for feedback type is present with correct options."
-    else:
-        feedback["Form"]["Dropdown Select for Feedback Type"] = "Dropdown select for feedback type is missing required options."
-else:
-    feedback["Form"]["Dropdown Select for Feedback Type"] = "Dropdown select for feedback type is missing."
-
-product_type_select = soup.find("select", {"name": "product_type", "multiple": True})
-if product_type_select:
-    options = [opt.get("value") for opt in product_type_select.find_all("option")]
-    required_options = {"laptop", "desktop", "tablet", "smartphone", "other"}
-    if required_options.issubset(options):
-        marks["Form"]["Multiple Select for Product Type"] = 1
-        feedback["Form"]["Multiple Select for Product Type"] = "Multiple select for product type is present with correct options."
-    else:
-        feedback["Form"]["Multiple Select for Product Type"] = "Multiple select for product type is missing required options."
-else:
-    feedback["Form"]["Multiple Select for Product Type"] = "Multiple select for product type is missing."
-
-reset_button = soup.find("button", {"type": "reset"})
-if reset_button:
-    marks["Form"]["Button to Reset the Form"] = 1
-    feedback["Form"]["Button to Reset the Form"] = "Reset button is present."
-else:
-    feedback["Form"]["Button to Reset the Form"] = "Reset button is missing."
-
-submit_button = soup.find("button", {"type": "submit"})
-if submit_button:
-    marks["Form"]["Button to Submit the Form"] = 1
-    feedback["Form"]["Button to Submit the Form"] = "Submit button is present."
-else:
-    feedback["Form"]["Button to Submit the Form"] = "Submit button is missing."
-
+# Final results container
 overall = {"data": []}
-for category, val in marks["Form"].items():
-    overall["data"].append({
-        "testid": "Form/" + category,
-        "score": val,
-        "maximum marks": 1,
-        "message": feedback["Form"][category],
-    })
 
+try:
+    with open(input_file, "r", encoding="utf-8") as f:
+        soup = BeautifulSoup(f, "html.parser")
+
+    # 1. Textarea for Comments
+    textarea = soup.find("textarea", {"name": "comments"})
+    entry = template.copy()
+    entry["testid"] = "Form/Textarea for Comments"
+    if textarea and textarea.get("id") == "comments":
+        entry["status"] = "success"
+        entry["score"] = 1
+        entry["message"] = "Textarea for comments is present and correctly named."
+    else:
+        entry["message"] = "Textarea for comments is missing or incorrectly named."
+    overall["data"].append(entry)
+
+    # 2. Dropdown Select for Feedback Type
+    feedback_type_select = soup.find("select", {"name": "feedback_type"})
+    entry = template.copy()
+    entry["testid"] = "Form/Dropdown Select for Feedback Type"
+    if feedback_type_select:
+        options = [opt.get("value") for opt in feedback_type_select.find_all("option")]
+        required_options = {"general", "product", "service", "other"}
+        if required_options.issubset(options):
+            entry["status"] = "success"
+            entry["score"] = 1
+            entry["message"] = "Dropdown select for feedback type is present with correct options."
+        else:
+            entry["message"] = "Dropdown select for feedback type is missing required options."
+    else:
+        entry["message"] = "Dropdown select for feedback type is missing."
+    overall["data"].append(entry)
+
+    # 3. Multiple Select for Product Type
+    product_type_select = soup.find("select", {"name": "product_type", "multiple": True})
+    entry = template.copy()
+    entry["testid"] = "Form/Multiple Select for Product Type"
+    if product_type_select:
+        options = [opt.get("value") for opt in product_type_select.find_all("option")]
+        required_options = {"laptop", "desktop", "tablet", "smartphone", "other"}
+        if required_options.issubset(options):
+            entry["status"] = "success"
+            entry["score"] = 1
+            entry["message"] = "Multiple select for product type is present with correct options."
+        else:
+            entry["message"] = "Multiple select for product type is missing required options."
+    else:
+        entry["message"] = "Multiple select for product type is missing."
+    overall["data"].append(entry)
+
+    # 4. Button to Reset the Form
+    reset_button = soup.find("button", {"type": "reset"})
+    entry = template.copy()
+    entry["testid"] = "Form/Button to Reset the Form"
+    if reset_button:
+        entry["status"] = "success"
+        entry["score"] = 1
+        entry["message"] = "Reset button is present."
+    else:
+        entry["message"] = "Reset button is missing."
+    overall["data"].append(entry)
+
+    # 5. Button to Submit the Form
+    submit_button = soup.find("button", {"type": "submit"})
+    entry = template.copy()
+    entry["testid"] = "Form/Button to Submit the Form"
+    if submit_button:
+        entry["status"] = "success"
+        entry["score"] = 1
+        entry["message"] = "Submit button is present."
+    else:
+        entry["message"] = "Submit button is missing."
+    overall["data"].append(entry)
+
+except Exception as e:
+    entry = template.copy()
+    entry["testid"] = "Form/Error"
+    entry["message"] = f"Autograder crashed: {e}"
+    overall["data"].append(entry)
+
+# Print results
 eval_path = os.path.join(os.path.dirname(__file__), "../.evaluationScripts/evaluate.json")
 with open(eval_path, "w") as f:
     json.dump(overall, f, indent=4)
